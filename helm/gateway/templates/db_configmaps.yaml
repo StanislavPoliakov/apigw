@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-{{ .Release.Name }}-database
+data:
+  database_url: {{ .Release.Name }}-postgresql
+  database_port: {{ .Values.postgresql.servicePort | quote }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-{{ .Release.Name }}-auth
+data:
+  database_name: {{ .Values.settings.database.auth.name }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-{{ .Release.Name }}-profile
+data:
+  database_name: {{ .Values.settings.database.profiles.name }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-{{ .Release.Name }}-connection
+data:
+  auth_issuer: {{ .Values.settings.connection.issuer }}

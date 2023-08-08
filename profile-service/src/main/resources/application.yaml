@@ -1,0 +1,17 @@
+ktor:
+    application:
+        modules:
+            - msa.ApplicationKt.module
+    deployment:
+        port: 8081
+database:
+  name: "$DB_NAME:"
+  username: "$DB_USER:"
+  password: "$DB_PASSWORD:"
+  url: "$DB_URL:"
+  port: "5432"
+  driver_postgres: "org.postgresql.Driver"
+jwt:
+  issuer: "$ISSUER:"
+  audience: "profile-service"
+  realm: "Authenticated Service Call"

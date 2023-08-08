@@ -1,0 +1,71 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: {{ .Release.Name }}-apigw
+spec:
+  # The selector matches the ingress gateway pod labels.
+  # If you installed Istio using Helm following the standard documentation, this would be "istio=ingress"
+  selector:
+    istio: ingressgateway # use istio default controller
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: vs-{{ .Release.Name }}
+spec:
+  hosts:
+    - "auth-service"
+    - "arch.homework"
+    - service-{{ .Release.Name }}-profile-service.gateway.svc.cluster.local
+    - service-{{ .Release.Name }}-auth-service.gateway.svc.cluster.local
+  gateways:
+    - {{ .Release.Name }}-apigw
+    - mesh
+  http:
+    - match:
+        - uri:
+            prefix: "/register"
+      route:
+        - destination:
+            host: service-{{ .Release.Name }}-profile-service.gateway.svc.cluster.local
+            port:
+              number: {{ .Values.settings.profileService.port }}
+    - match:
+        - uri:
+            prefix: "/profile"
+      route:
+        - destination:
+            host: service-{{ .Release.Name }}-profile-service.gateway.svc.cluster.local
+            port:
+              number: {{ .Values.settings.profileService.port }}
+    - match:
+        - uri:
+            prefix: "/srv_register"
+      route:
+        - destination:
+            host: service-{{ .Release.Name }}-auth-service.gateway.svc.cluster.local
+            port:
+              number: {{ .Values.settings.authService.port }}
+    - match:
+        - uri:
+            prefix: "/login"
+      route:
+        - destination:
+            host: service-{{ .Release.Name }}-auth-service.gateway.svc.cluster.local
+            port:
+              number: {{ .Values.settings.authService.port }}
+    - match:
+        - uri:
+              prefix: "/.well-known/"
+      route:
+        - destination:
+            host: service-{{ .Release.Name }}-auth-service.gateway.svc.cluster.local
+            port:
+              number: {{ .Values.settings.authService.port }}

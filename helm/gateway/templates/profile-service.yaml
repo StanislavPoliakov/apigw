@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-{{ .Release.Name }}-profile-service
+  labels:
+    app: {{ .Release.Name }}-profile-service
+    config: config-{{ .Release.Name }}-profile-service
+data:
+  application_port: {{ .Values.settings.profileService.port | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-{{ .Release.Name }}-profile-service
+  labels:
+    app: {{ .Release.Name }}-profile-service
+    service: service-{{ .Release.Name }}-profile-service
+spec:
+  ports:
+    - name: http
+      port: {{ .Values.settings.profileService.port }}
+  selector:
+    app: {{ .Release.Name }}-profile-service
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: account-{{ .Release.Name }}-profile-service
+  labels:
+    account: account-{{ .Release.Name }}-profile-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-{{ .Release.Name }}-profile-service
+  labels:
+    app: {{ .Release.Name }}-profile-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-profile-service
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-profile-service
+    spec:
+      serviceAccountName: account-{{ .Release.Name }}-profile-service
+      containers:
+        - name: {{ .Values.settings.profileService.container.name }}
+          image: {{ .Values.settings.profileService.container.image }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: config-{{ .Release.Name }}-profile-service
+                  key: application_port
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: config-{{ .Release.Name }}-profile
+                  key: database_name
+            - name: DB_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: config-{{ .Release.Name }}-database
+                  key: database_url
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: config-{{ .Release.Name }}-database
+                  key: database_port
+            - name: ISSUER
+              valueFrom:
+                configMapKeyRef:
+                  name: config-{{ .Release.Name }}-connection
+                  key: auth_issuer
+          ports:
+            - containerPort: {{ .Values.settings.profileService.port }}

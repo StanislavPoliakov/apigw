@@ -1,0 +1,42 @@
+settings:
+  authService:
+    port: 8080
+    container:
+      name: auth-service
+      image: stanislavpoliakov/auth-service:1.1.0
+  profileService:
+    port: 8081
+    container:
+      name: profile-service
+      image: stanislavpoliakov/profile-service:1.1.0
+  database:
+    auth:
+      name: 'credentials'
+      user: 'auth_service'
+      password: 'pass_auth_service'
+    profiles:
+      name: 'profiles'
+      user: 'profile_service'
+      password: 'pass_profile_service'
+  connection:
+    issuer: "http://service-gateway-auth-service.gateway.svc.cluster.local/"
+
+
+postgresql:
+  auth:
+    postgresPassword: postgres
+    username: postgres
+    password: postgres
+  servicePort: 5432
+  primary:
+    initdb:
+      user: postgres
+      password: postgres
+      debug: true
+      scripts:
+        init_credentials.sql: |
+          CREATE USER auth_service WITH ENCRYPTED PASSWORD 'pass_auth_service';
+          CREATE DATABASE credentials WITH OWNER auth_service;
+        init_profiles.sql: |
+          CREATE USER profile_service WITH ENCRYPTED PASSWORD 'pass_profile_service';
+          CREATE DATABASE profiles WITH OWNER profile_service;
